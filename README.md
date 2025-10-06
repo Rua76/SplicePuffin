@@ -23,6 +23,8 @@ This repository contains code and pretrained models for training and analyzing t
 ---
 ## To create data files for model training
 
+Files contained in `/create_dataset`
+
 Run `./create_files.sh`. This will generate `dataset*.h5` files, which are the training and test datasets (requires ~500GB of space). These can be used in the `train` and `evaluate` steps below.
 
 Dependencies:
