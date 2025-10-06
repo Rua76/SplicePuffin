@@ -29,7 +29,7 @@ Dependencies:
 - `conda create -c bioconda -n create_files_env python=2.7 h5py bedtools` or equivalent
 
 Inputs: 
-- `splice_table_Human.txt`
+- `splice_table_Human.txt` Link: https://drive.google.com/file/d/1p5GoZ4QX1h0NnosMoJvQ45DOmo0_R2YO/view?usp=sharing
 - Reference genomes for each species from [GENCODE](https://www.gencodegenes.org/) and [Ensembl](https://uswest.ensembl.org/index.html)
 
 Outputs: `dataset_train_all.h5` and `dataset_test_1.h5` (human test sequences)
