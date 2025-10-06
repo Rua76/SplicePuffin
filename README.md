@@ -17,6 +17,9 @@ This repository contains code and pretrained models for training and analyzing t
 ### `models.zip`
 - Archive containing **pretrained model replicates** from the training stage1.
 
+### `motif_12replicates_selected.pdf`
+- Repetitive Motifs extracted with 7 out of 12 replicates. Same as the file shared in the slack channel.
+
 ---
 
 **Note:** Ensure all dependencies required by the Puffin model framework are installed before running the training or motif extraction scripts.
