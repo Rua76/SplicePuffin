@@ -139,7 +139,7 @@ bestmats = []
 bestscores = []
 filescores = defaultdict(list)
 
-output_dir = "../figures/motif_replicates"
+output_dir = "../figures/motif_effects_difference"
 os.makedirs(output_dir, exist_ok=True)
 
 for cc_i, cc in enumerate(nx.connected_components(g)):
@@ -153,18 +153,17 @@ for cc_i, cc in enumerate(nx.connected_components(g)):
     if nrows == 1:
         axes = axes[np.newaxis, :]
 
-    # Plot each motif in this connected component
     for row_i, node in enumerate(cc):
         motifind, matind = map(int, node.split('_'))
 
-        # Compute score (only used for determining bestmat)
+        # Compute score (for best motif selection)
         score = np.sum([
-            crossmats[i, matind][:, motifind].max() if i < matind 
-            else crossmats[matind, i][motifind, :].max() 
+            crossmats[i, matind][:, motifind].max() if i < matind
+            else crossmats[matind, i][motifind, :].max()
             for i in np.setdiff1d(range(4), [matind])
         ])
 
-        # Track best motif matrix for this CC (optional)
+        # Track best motif matrix for this CC
         if row_i == 0 or score > bestscore:
             bestscore = score
             bestmat = mats[matind][motifind]
@@ -173,23 +172,39 @@ for cc_i, cc in enumerate(nx.connected_components(g)):
         plotfun(mats[matind][motifind].T, ax=axes[row_i][0])
         axes[row_i][0].set_xticks([])
 
-        # --- Column 2: demats_label ---
-        axes[row_i][1].plot(np.arange(-300, 301), demats_label[matind][0, motifind])
+        # --- Column 2: demats_label (splicing vs non-splicing) ---
+        x = np.arange(-300, 301)
+        non_splice = demats_label[matind][0, motifind]
+        donor = demats_label[matind][1, motifind]
+        acceptor = demats_label[matind][2, motifind]
+
+        # Compute differences
+        donor_diff = donor - non_splice
+        acceptor_diff = acceptor - non_splice
+
+        # Plot both difference curves
+        axes[row_i][1].plot(x, donor_diff, label="Donor", color="C0")
+        axes[row_i][1].plot(x, acceptor_diff, label="Acceptor", color="C1")
 
         # --- Column 3: demats_SSE ---
         axes[row_i][2].plot(np.arange(-300, 301), demats_SSE[matind][0, motifind])
 
         sns.despine()
 
-    # Add shared column titles once (top row)
+    # Shared legend and titles
+    handles, labels = axes[0][1].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False)
+
     axes[0][0].set_title("Motif", fontsize=10)
-    axes[0][1].set_title("Label", fontsize=10)
+    axes[0][1].set_title("ΔLabel (vs Non-splice)", fontsize=10)
     axes[0][2].set_title("SSE", fontsize=10)
 
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0, 1, 0.96])  # leave room for legend
 
-    # Save individual PDF for this connected component
-    pdf_path = os.path.join(output_dir, f"motif_replicate_cc{cc_i+1}.pdf")
+    # --- Save figure ---
+    pdf_path = os.path.join(output_dir, f"motif_cc{cc_i+1}.pdf")
     plt.savefig(pdf_path, bbox_inches="tight", dpi=300)
     plt.close(fig)
+
+    print(f"Saved: {pdf_path}")
 
