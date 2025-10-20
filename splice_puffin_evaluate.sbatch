@@ -1,0 +1,25 @@
+#!/bin/sh
+#SBATCH --job-name=evaluate_splice_puffin
+#SBATCH --time=1:00:00
+#SBATCH --partition=gpu
+#SBATCH --ntasks=1
+#SBATCH --mem=30G
+#SBATCH --cpus-per-task=1
+#SBATCH --gpus-per-task=1
+#SBATCH --account=pi-xuanyao
+#SBATCH -o eval_splice_puffin.log
+
+source /project2/yangili1/yhsz5566/mambaforge/etc/profile.d/conda.sh
+
+conda activate puffin
+
+#python plot_annotated_site_CDF_merged.py -i splice_table_Human.txt -p splice_table_Human.Pangolin.txt -g gencode.v44.annotation.gtf -pg gencode.v34.annotation.gtf  -m MANE_human/release_1.4/MANE.GRCh38.v1.4.ensembl_genomic.gtf  \
+#        -o annotated_splice_sites_CDF_merged.pdf > annotated_splice_sites_CDF.summary.txt
+
+#python evaluate_auprc_replicates.py \
+#    --test_data ../../create_dataset/Annotated_SSE_Based_datasets/dataset_test_1.h5 \
+#    --save_dir train_parallel/ \
+#    --num_replicates 11 \
+#    --batch_size 64
+
+python plot_motif_effect_DA.py
