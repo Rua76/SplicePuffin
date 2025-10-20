@@ -12,8 +12,6 @@ from matplotlib import pyplot as plt
 
 from models import H5Dataset, SimpleNetModified_DA
 
-NUM_REPLICATES = 6
-
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Train SimpleNet model on genomic data')
     

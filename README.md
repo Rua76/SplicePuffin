@@ -1,41 +1,98 @@
 # SplicePuffin (temp name)
 
 This repository contains code and pretrained models for training and analyzing the Puffin splice model.
-
-## Files
-
-### `train_splice_puffin_stage1.py`
-- Training script for the Puffin splice model.  
-- Trains **12 replicates**, each on **randomly sampled 40,000 datapoints**.  
-- Each datapoint is an **input sequence of 5,000 bp** containing an arbitrary number of splice sites.  
-- Each replicate is trained for **50 epochs**.
-
-### `Process_models_new.ipynb`
-- Jupyter notebook modified from `Process_models.ipynb` of the original Puffin model.  
-- Used to **extract sequence motifs** from trained model replicates.
-
-### `models.zip`
-- Archive containing **pretrained model replicates** from the training stage1.
-
-### `motif_12replicates_selected.pdf`
-- Repetitive Motifs extracted with 7 out of 12 replicates. Same as the file shared in the slack channel.
-
 ---
 ## To create data files for model training
 
-Files contained in `/create_dataset`
+1. use mamba or conda to create a new environment with the required dependencies from 'puffin.yml':
+    
+    ```bash
+    mamba env create -f puffin.yml
+    mamba activate puffin
+    ```
 
-Run `./create_files.sh`. This will generate `dataset*.h5` files, which are the training and test datasets (requires ~500GB of space). These can be used in the `train` and `evaluate` steps below.
+2. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
 
-Dependencies:
-- `conda create -c bioconda -n create_files_env python=2.7 h5py bedtools` or equivalent
+    Link to `GRCh38.primary_assembly.genome.fa`:
+    ```bash
+        https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
+    ```
+    Link to `gencode.v44.annotation.gtf`:
+    ```bash
+        https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
+    ```
+    Run `creat_db.py` to process the GTF file into a `gffutils` database file:
+    ```bash
+    python create_db.py --annotation_file gencode.v44.annotation.gtf 
+    ```
 
-Inputs: 
-- `splice_table_Human.txt` Link: https://drive.google.com/file/d/1p5GoZ4QX1h0NnosMoJvQ45DOmo0_R2YO/view?usp=sharing
-- Reference genomes for each species from [GENCODE](https://www.gencodegenes.org/) and [Ensembl](https://uswest.ensembl.org/index.html)
+3. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
 
-Outputs: `dataset_train_all.h5` and `dataset_test_1.h5` (human test sequences)
+    ```bash
+    sbatch create_dataset_files.sbatch
+    ```
+    This will create the necessary HDF5 files for training and testing, removing paralogous sequences as specified in the script.
 
+---
+
+
+---
+## To train the model
+
+1. Model architectures are stored in the `train/models.py` file. You can modify the architecture as needed.
+
+2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
+
+3. The number of models trained on one GPU is set to 4 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run. Do not use `11` as it result in failed training.
+
+4. Submit the training job using SLURM:
+
+    ```bash
+    sbatch splice_puffin_parallel_train.sbatch
+    ```
+
+There will be 12 models replicates trained. AUPRC and loss will be logged along the training process. The trained models and logs will be saved in the specified `SAVE_DIR`.
+---
+
+---
+## To evaluate the model
+
+1. `evaluate_auprc.py` script is used to calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
+
+    ```bash
+    python evaluate_auprc.py \
+        --test_data path/to/dataset_test.h5 \
+        --save_dir path/to/trained_models \
+        --replicate_id <replicate_number> \
+        --batch_size 32 \
+        --num_workers 4
+    ```
+
+2. `plot_predictions_vs_targets_DA.py` script is used to plot the model predictions against the true targets. Use the following command:
+
+    ```bash
+    python plot_predictions_vs_targets_DA.py \
+        --model_path ./models/model.rep0.pth \
+        --test_data ../../create_dataset/Annotated_SSE_Based_datasets/dataset_test_1.h5 \
+        --sample_idx 1000 \  # Index of the starting sample to plot
+        --num_samples 100 \  # Number of samples to plot
+        --output_dir ./models/plots \
+        --gtf ../resources/gencode.v44.annotation.db
+    ```
+
+    Note that the gtf needs to be processed into a database file using `gffutils` before use.
+
+3. `plot_motif_effect_DA.py` script is used to visualize the motifs and the motif effects learned by the model. Use the following command:
+
+    ```bash
+    python plot_motif_effect_DA.py \
+        --model_dir ../train/train_parallel \
+        --n_models 12 \
+        --output_dir ./figures/motif_effects \
+        --similarity_threshold 0.95 \
+        --replicate_select 1 \
+        --replicate_min 7
+    ```
 ---
 
 **Note:** Ensure all dependencies required by the Puffin model framework are installed before running the training or motif extraction scripts.

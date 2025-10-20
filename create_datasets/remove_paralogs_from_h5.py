@@ -149,24 +149,63 @@ def load_h5_dataset(h5_path):
     return [names, chroms, strands, starts, ends, seqs, labels]
 
 
+import argparse
+
 # -------------------------------------------------
 # MAIN
 # -------------------------------------------------
 if __name__ == "__main__":
-    train_path = "dataset_train_all.h5"
-    test_path = "dataset_test_1.h5"
-    output_dir = "./"
-    exp = "1"
-    min_identity = 0.8
-    min_coverage = 0.7
+    parser = argparse.ArgumentParser(
+        description="Remove paralogous sequences from datasets."
+    )
+    parser.add_argument(
+        "--train_path",
+        type=str,
+        required=True,
+        help="Path to the training HDF5 dataset (e.g., dataset_train_all.h5)",
+    )
+    parser.add_argument(
+        "--test_path",
+        type=str,
+        required=True,
+        help="Path to the testing HDF5 dataset (e.g., dataset_test_1.h5)",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="./",
+        help="Directory to save output files (default: current directory)",
+    )
+    parser.add_argument(
+        "--exp",
+        type=str,
+        default="1",
+        help="Experiment label or ID (default: 1)",
+    )
+    parser.add_argument(
+        "--min_identity",
+        type=float,
+        default=0.8,
+        help="Minimum sequence identity threshold (default: 0.8)",
+    )
+    parser.add_argument(
+        "--min_coverage",
+        type=float,
+        default=0.7,
+        help="Minimum coverage threshold (default: 0.7)",
+    )
 
-    train_data = load_h5_dataset(train_path)
+    args = parser.parse_args()
 
+    # Load training data
+    train_data = load_h5_dataset(args.train_path)
+
+    # Run the function
     remove_paralogous_sequences_on_the_fly(
         train_data=train_data,
-        test_h5_path=test_path,
-        min_identity=min_identity,
-        min_coverage=min_coverage,
-        output_dir=output_dir,
-        exp=exp,
+        test_h5_path=args.test_path,
+        min_identity=args.min_identity,
+        min_coverage=args.min_coverage,
+        output_dir=args.output_dir,
+        exp=args.exp,
     )
