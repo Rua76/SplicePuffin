@@ -1,6 +1,7 @@
 # SplicePuffin (temp name)
 
 This repository contains code and pretrained models for training and analyzing the Puffin splice model.
+
 ---
 ## To create data files for model training
 
@@ -39,6 +40,8 @@ This repository contains code and pretrained models for training and analyzing t
 ---
 ## To train the model
 
+All codes are stored in the `train` directory.
+
 1. Model architectures are stored in the `train/models.py` file. You can modify the architecture as needed.
 
 2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
@@ -56,6 +59,9 @@ This repository contains code and pretrained models for training and analyzing t
 
 ---
 ## To evaluate the model
+
+All codes are stored in the `evaluate` directory.
+
 
 1. `evaluate_auprc.py` script is used to calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
 
