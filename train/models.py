@@ -39,8 +39,6 @@ class SimpleNetModified_DA(nn.Module):
     def __init__(self, input_channels=4):
         super(SimpleNetModified_DA, self).__init__()
         self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
-        #self.conv_donor = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
-        #self.conv_acceptor = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
         self.activation = nn.Softplus()
 
         # Separate deconv layers for donor and acceptor 
@@ -48,16 +46,9 @@ class SimpleNetModified_DA(nn.Module):
         self.deconv_acceptor = FFTConv1d(40, 1, kernel_size=601, padding=300)  
 
     def forward(self, x):
-
         y = self.conv(x)  # Shape: (batch_size, 40, 5000)
-        #y_donor = self.conv_donor(x)  # Shape: (batch_size, 40, 5000)
-        #y_acceptor = self.conv_acceptor(x)  # Shape: (batch_size, 40, 5000)
-        
         # activation
         yact = self.activation(y)   # Shape: (batch_size, 40, 5000)
-        #yact_donor = self.activation(y_donor) # Shape: (batch_size, 40, 5000)
-        #yact_acceptor = self.activation(y_acceptor) # Shape: (batch_size, 40, 5000)
-        
         # Separate predictions for donor and acceptor
         y_pred_donor = torch.sigmoid(self.deconv_donor(yact))  # Shape: (batch_size, 1, 5000)
         y_pred_acceptor = torch.sigmoid(self.deconv_acceptor(yact))  # Shape: (batch_size, 1, 5000)

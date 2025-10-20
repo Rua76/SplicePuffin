@@ -27,7 +27,22 @@ This repository contains code and pretrained models for training and analyzing t
     python create_db.py --annotation_file gencode.v44.annotation.gtf 
     ```
 
-3. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
+3. The table of splice sites is needed. An example row looks like this:
+
+    ```
+    ENSG00000278267.1	0	chr1	-	17368	17436	chr1|17368|-|A:0.17154942528735637;
+    ```
+
+    Here, the columns represent:
+    - Gene ID
+    - 0 (used to indicate paralog, now deprecateds, just set to 0)
+    - Chromosome
+    - Strand
+    - Start position
+    - End position
+    - The coordinates, type (Donor or acceptor) and splice site strength estimate (SSE) value of a splice site.
+
+4. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
 
     ```bash
     sbatch create_dataset_files.sbatch
@@ -41,6 +56,33 @@ This repository contains code and pretrained models for training and analyzing t
 All codes are stored in the `train` directory.
 
 1. Model architectures are stored in the `train/models.py` file. You can modify the architecture as needed.
+    Current model is `SimpleNetModified_DA`, which predicts both donor and acceptor splice sites simultaneously:
+    
+    ```python  
+        class SimpleNetModified_DA(nn.Module):
+        def __init__(self, input_channels=4):
+            super(SimpleNetModified_DA, self).__init__()
+            self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+            self.activation = nn.Softplus()
+
+            # Separate deconv layers for donor and acceptor 
+            self.deconv_donor = FFTConv1d(40, 1, kernel_size=601, padding=300) 
+            self.deconv_acceptor = FFTConv1d(40, 1, kernel_size=601, padding=300)  
+
+        def forward(self, x):
+            y = self.conv(x)  # Shape: (batch_size, 40, 5000)
+            # activation
+            yact = self.activation(y)   # Shape: (batch_size, 40, 5000)
+            # Separate predictions for donor and acceptor
+            y_pred_donor = torch.sigmoid(self.deconv_donor(yact))  # Shape: (batch_size, 1, 5000)
+            y_pred_acceptor = torch.sigmoid(self.deconv_acceptor(yact))  # Shape: (batch_size, 1, 5000)
+            
+            # Concatenate the outputs along channel dimension
+            y_pred = torch.cat([y_pred_donor, y_pred_acceptor], dim=1)  # Shape: (batch_size, 2, 5000)
+            
+            # Crop the output to match label shape: 5000 -> 4000 by removing 500 from each side
+            return y_pred[:, :, 500:-500]  # Final shape: (batch_size, 2, 4000)
+    ```
 
 2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
 
