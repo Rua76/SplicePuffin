@@ -40,7 +40,9 @@ This repository contains code and pretrained models for training and analyzing t
     - Strand
     - Start position
     - End position
-    - The coordinates, type (Donor or acceptor) and splice site strength estimate (SSE) value of a splice site.
+    - The coordinates, type (Donor or acceptor) and splice site strength estimate (SSE) value of a splice site. ';' is used to separate multiple splice sites for a gene.
+
+    To train your own model, you need to create a similar table for your dataset.
 
 4. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
 
