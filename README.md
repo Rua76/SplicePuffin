@@ -51,7 +51,7 @@ This repository contains code and pretrained models for training and analyzing t
     sbatch splice_puffin_parallel_train.sbatch
     ```
 
-There will be 12 models replicates trained. AUPRC and loss will be logged along the training process. The trained models and logs will be saved in the specified `SAVE_DIR`.
+    There will be 12 models replicates trained. AUPRC and loss will be logged along the training process. The trained models and logs will be saved in the specified `SAVE_DIR`.
 ---
 
 ---
