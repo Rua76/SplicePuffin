@@ -16,11 +16,11 @@ This repository contains code and pretrained models for training and analyzing t
 
     Link to `GRCh38.primary_assembly.genome.fa`:
     ```bash
-        https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
+    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
     ```
     Link to `gencode.v44.annotation.gtf`:
     ```bash
-        https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
+    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
     ```
     Run `creat_db.py` to process the GTF file into a `gffutils` database file:
     ```bash
@@ -61,7 +61,7 @@ All codes are stored in the `train` directory.
     Current model is `SimpleNetModified_DA`, which predicts both donor and acceptor splice sites simultaneously:
     
     ```python  
-        class SimpleNetModified_DA(nn.Module):
+    class SimpleNetModified_DA(nn.Module):
         def __init__(self, input_channels=4):
             super(SimpleNetModified_DA, self).__init__()
             self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
