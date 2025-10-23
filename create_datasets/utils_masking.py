@@ -119,7 +119,7 @@ def get_bin(cov, strand=None, site_type=None):
 
 def create_datapoints(seq, strand, tx_start, tx_end, jn_start):
     """Main feature/label creation routine."""
-    seq = 'N' * (CL_max // 2) + seq + 'N' * (CL_max // 2)
+    seq = 'N'*(CL_max//2) + seq[CL_max//2:-CL_max//2] + 'N'*(CL_max//2)
     seq = seq.upper().replace('A', '1').replace('C', '2')
     seq = seq.replace('G', '3').replace('T', '4').replace('N', '0')
 
