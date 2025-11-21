@@ -1,0 +1,15 @@
+name: subread
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+  - r
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - libgcc-ng=13.2.0=h807b86a_3
+  - libgomp=13.2.0=h807b86a_3
+  - libzlib=1.2.13=hd590300_5
+  - subread=1.6.4=h84994c4_1
+  - zlib=1.2.13=hd590300_5
+prefix: /project2/gilad/bjf79_project1/envs/subread
