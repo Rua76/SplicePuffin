@@ -60,7 +60,9 @@ mamba env create -f r_env.yml
 mamba activate r_env
 ```
 
-### 2. Run on an HPC cluster using SLURM
+### 2. Download a `gencode.v44.annotation.gtf` file
+
+### 3. Run on an HPC cluster using SLURM
 ```bash
 sbatch run_splice_site_usage.sbatch
 ```
