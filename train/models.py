@@ -5,6 +5,49 @@ from torch.utils import data
 import torch.nn.functional as F
 import h5py
 
+
+# ------------------------------------------------------------
+#  Factorized Synergy Layer
+# ------------------------------------------------------------
+class FactorizedFFTConvBlock(nn.Module):
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 mid_channels: int,
+                 kernel_size: int,
+                 padding: int):
+        super().__init__()
+
+        # 1×1 conv: input → bottleneck
+        self.reduce = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=mid_channels,
+            kernel_size=1
+        )
+
+        # FFT convolution in bottleneck space
+        self.fftconv = FFTConv1d(
+            in_channels=mid_channels,
+            out_channels=mid_channels,
+            kernel_size=kernel_size,
+            padding=padding
+        )
+
+        # 1×1 conv: bottleneck → output
+        self.expand = nn.Conv1d(
+            in_channels=mid_channels,
+            out_channels=out_channels,
+            kernel_size=1
+        )
+
+    def forward(self, x):
+        x = self.reduce(x)
+        x = self.fftconv(x)
+        x = self.expand(x)
+        return x
+
+
+
 # ------------------------------------------------------------
 #  DA model (Donor + Acceptor) and dataset
 # ------------------------------------------------------------
@@ -35,6 +78,19 @@ class H5Dataset(data.Dataset):
     def __len__(self):
         return self.length
 
+class SimpleNetModified_DA_SSE(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        self.activation = nn.Softplus()
+        self.deconv = FFTConv1d(40, 2, kernel_size=601, padding=300)
+
+    def forward(self, x):
+        y = self.activation(self.conv(x))
+        y_pred = torch.sigmoid(self.deconv(y))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500]
+    
+
 class SimpleNetModified_DA(nn.Module):
     def __init__(self, input_channels=4):
         super(SimpleNetModified_DA, self).__init__()
@@ -58,6 +114,28 @@ class SimpleNetModified_DA(nn.Module):
         
         # Crop the output to match label shape: 5000 -> 4000 by removing 500 from each side
         return y_pred[:, :, 500:-500]  # Final shape: (batch_size, 2, 4000)
+    
+class SimpleNetModified_DA_TripleLayers(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
+        self.synergy_layer = FactorizedFFTConvBlock(
+            in_channels=40,
+            out_channels=40,
+            mid_channels=4,   # your bottleneck
+            kernel_size=401,
+            padding=200
+        )
+
+        self.effect_layer = FFTConv1d(40, 2, kernel_size=601, padding=300)
+        self.softplus = nn.Softplus()
+
+    def forward(self, x):
+        y = self.softplus(self.motif_layer(x))
+        motifact = torch.sigmoid(self.synergy_layer(y)) * y
+        y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500]
     
 # ------------------------------------------------------------
 #  NDA model (3 channel label + SSE) and dataset
