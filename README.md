@@ -40,10 +40,6 @@ This repository contains code and pretrained models for training and analyzing t
     # unzip
     gunzip gencode.v44.annotation.gtf.gz
     ```
-    Run `creat_db.py` to process the GTF file into a `gffutils` database file:
-    ```bash
-    python create_db.py --annotation_file gencode.v44.annotation.gtf 
-    ```
 
 4. The table of splice sites is needed. An example row looks like this:
 
