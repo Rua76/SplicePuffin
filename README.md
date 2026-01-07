@@ -192,14 +192,17 @@ The model architecture is selected internally based on `--num_layers` and `--arc
 #### Typical usage example
 
 ```bash
-python train_model.py \
-  --train_data dataset_train.h5 \
-  --test_data dataset_test.h5 \
-  --num_layers 3 \
-  --arch_type residual \
-  --loss_type bce \
-  --replicate_id 0 \
-  --save_dir models/
+python train_splice_puffin_DA_parallel.py \
+      --train_data $TRAIN_DATA \
+      --test_data $TEST_DATA \
+      --save_dir $BASE_SAVE_DIR \
+      --replicate_id $RID \
+      --batch_size 16 \
+      --learning_rate 5e-4 \
+      --num_layers 3 \
+      --arch_type standard  \
+      --loss_type bce \
+      --epochs 500
 ```
 
 ---
