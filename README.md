@@ -5,14 +5,19 @@ This repository contains code and pretrained models for training and analyzing t
 ---
 ## To create data files for model training
 
-1. use mamba or conda to create a new environment with the required dependencies from 'puffin.yml':
+1. use mamba or conda to create a new environment (python version 3.11):
     
     ```bash
-    mamba env create -f puffin.yml
+    mamba create -n puffin python=3.11 -y
     mamba activate puffin
     ```
 
-2. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
+    Install pytorch with CUDA 11.8
+   ```bash
+   pip install torch==2.3.* torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+   ```
+
+3. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
 
     Get `GRCh38.primary_assembly.genome.fa`:
     ```bash
@@ -31,7 +36,7 @@ This repository contains code and pretrained models for training and analyzing t
     python create_db.py --annotation_file gencode.v44.annotation.gtf 
     ```
 
-3. The table of splice sites is needed. An example row looks like this:
+4. The table of splice sites is needed. An example row looks like this:
 
     ```
     ENSG00000278267.1	0	chr1	-	17368	17436	chr1|17368|-|A:0.17154942528735637;
@@ -48,7 +53,7 @@ This repository contains code and pretrained models for training and analyzing t
 
     To train your own model, you need to create a similar table for your dataset.
 
-4. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
+5. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
 
     ```bash
     sbatch create_dataset_files.sbatch
