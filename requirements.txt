@@ -1,0 +1,26 @@
+# ---- core scientific ----
+numpy
+pandas
+scipy
+matplotlib
+seaborn
+scikit-learn
+h5py
+numba
+
+# ---- bio / genomics ----
+pybigwig
+pyfaidx
+pytabix
+gffutils
+mappy
+
+# ---- notebooks ----
+jupyter
+ipykernel
+
+# ---- extras ----
+logomaker
+selene-sdk
+tqdm
+torch_fftconv
