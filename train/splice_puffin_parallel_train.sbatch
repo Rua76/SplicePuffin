@@ -32,6 +32,8 @@ mkdir -p $BASE_SAVE_DIR
 # ----------------------------
 # 3 layers model arch_type options: standard, large_kernel, residual, softplus 
 # ----------------------------
+# loss_type options: bce, kl
+# ----------------------------
 for RID in 1 2 3 4 5 6
 do
   echo "Launching replicate $RID..."
