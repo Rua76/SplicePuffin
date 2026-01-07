@@ -52,16 +52,6 @@ else:
     assert len(h5f2) % 4 == 0
     start = len(h5f2) // 4
 
-# --- filter lists ---
-if sys.argv[2] == '1':
-    with open("paralogs.txt") as f:
-        genes = set(line.strip() for line in f if line.strip())
-else:
-    genes = set()
-
-with open("orthologs.txt") as f:
-    orthologs = set(line.strip() for line in f if line.strip())
-
 ctr = start
 
 # --- main loop ---
@@ -74,13 +64,6 @@ for idx in range(SEQ.shape[0]):
     tx_end = TX_END[idx].decode() if isinstance(TX_END[idx], (bytes, np.bytes_)) else TX_END[idx]
     jn_start = JN_START[idx].decode() if isinstance(JN_START[idx], (bytes, np.bytes_)) else JN_START[idx]
     seq = SEQ[idx].decode() if isinstance(SEQ[idx], (bytes, np.bytes_)) else SEQ[idx]
-
-    if sys.argv[2] == '1' and name.split('.')[0] in genes:
-        continue
-
-    # Exclude orthologs from macaque/mouse training sets
-    if name.split('.')[0] in orthologs and sys.argv[1] != "all":
-        continue
 
     # Create data points
     X, A0, A1, mask = create_datapoints(seq, strand, tx_start, tx_end, jn_start)
