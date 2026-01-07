@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 import argparse
 import numpy as np
@@ -9,7 +10,7 @@ from torch import nn
 from torch.utils import data
 from matplotlib import pyplot as plt
 
-from models import H5Dataset, SimpleNetModified_DA_SSE, SimpleNetModified_DA_TripleLayers
+from models import H5Dataset, SimpleNet_TwoLayers, SimpleNet_TripleLayers, SimpleNet_TripleLayers_LargeKernel, SimpleNet_TripleLayers_residual, SimpleNet_TripleLayers_softplus
 from utils import evaluate_model_auprc, evaluate_model_regression, plot_regression_results, plot_auprc_results, progress_bar
 
 def parse_arguments():
@@ -48,8 +49,56 @@ def parse_arguments():
                        help='If set, run in test mode with limited data')
     parser.add_argument('--replicate_id', type=int, default=0,
                     help='Replicate ID for parallel training (default: 0)')
+    
+    # Model architecture
+    parser.add_argument(
+        '--num_layers',
+        type=int,
+        choices=[2, 3],
+        default=2,
+        help='Number of layers in SimpleNet (2 or 3, default: 2)'
+    )
+
+    # Model architecture type
+    parser.add_argument(
+        '--arch_type',
+        type=str,
+        choices=['standard', 'large_kernel', 'residual', 'triple_layers', 'softplus'],
+        default='standard',
+        help='Architecture type: standard, large_kernel, residual, or triple_layers (default: standard)'
+    )
+
+    # Loss function
+    parser.add_argument(
+        '--loss_type',
+        type=str,
+        choices=['bce', 'kl'],
+        default='bce',
+        help='Loss type to use: bce or kl (default: bce)'
+    )
+
 
     return parser.parse_args()
+
+# ------------------------------------------------------------
+# Experiment directory formatting
+# ------------------------------------------------------------
+def format_experiment_dir(args):
+    train_name = Path(args.train_data).stem
+    test_name  = Path(args.test_data).stem
+
+    exp_name = (
+        f"arch_{args.arch_type}_"
+        f"layers{args.num_layers}_"
+        f"loss{args.loss_type}_"
+        f"bs{args.batch_size}_"
+        f"lr{args.learning_rate}_"
+        f"wd{args.weight_decay}_"
+        f"{train_name}"
+    )
+
+    return Path(args.save_dir) / exp_name
+
 
 # ------------------------------------------------------------
 # loss functions with masking
@@ -95,14 +144,43 @@ def masked_kl_loss(y_pred, y_true, mask):
 
     return masked_kl
 
-def loss_function(y_pred, y_true, mask):
+def get_criterion(loss_type):
+    if loss_type == 'bce':
+        return masked_bce_loss
+    elif loss_type == 'kl':
+        return masked_kl_loss
+    else:
+        raise ValueError(f"Unknown loss type: {loss_type}")
+
+def get_model(num_layers, arch_type):
     """
-    Modified loss function that uses masking
-    y_pred: [batch, 2, seq_len] - model predictions (donor, acceptor)
-    y_true: [batch, 2, seq_len] - ground truth labels
-    mask: [batch, 1, seq_len] - mask from dataset
+    Get model based on architecture type and number of layers
     """
-    return masked_kl_loss(y_pred, y_true, mask)
+    if num_layers == 2:
+        if arch_type == 'standard':
+            return SimpleNet_TwoLayers(input_channels=4)
+        else:
+            print(f"Warning: arch_type '{arch_type}' not available for 2 layers, using standard")
+            return SimpleNet_TwoLayers(input_channels=4)
+    
+    elif num_layers == 3:
+        if arch_type == 'standard':
+            return SimpleNet_TripleLayers(input_channels=4)
+        elif arch_type == 'large_kernel':
+            return SimpleNet_TripleLayers_LargeKernel(input_channels=4)
+        elif arch_type == 'residual':
+            return SimpleNet_TripleLayers_residual(input_channels=4)
+        elif arch_type == 'triple_layers':
+            return SimpleNet_TripleLayers(input_channels=4)
+        elif arch_type == 'softplus':
+            return SimpleNet_TripleLayers_softplus(input_channels=4)
+        else:
+            print(f"Warning: arch_type '{arch_type}' not recognized for 3 layers, using standard")
+            return SimpleNet_TripleLayers(input_channels=4)
+    
+    else:
+        raise ValueError(f"Unsupported num_layers: {num_layers}")
+
 
 def train(epoch, model, train_dl, optimizer, scheduler, iters, criterion):
     print('\nEpoch: %d' % epoch, flush=True)
@@ -154,7 +232,11 @@ def main():
 
     # Print configuration
     print(f"\n=== Starting replicate {replicate} ===")
-    for arg in vars(args):
+    print(f"  Architecture: {args.arch_type}")
+    print(f"  Number of layers: {args.num_layers}")
+    print(f"  Loss type: {args.loss_type}")
+    for arg in ['train_data', 'test_data', 'batch_size', 'learning_rate', 
+                'weight_decay', 'epochs', 'replicate_id']:
         print(f"  {arg}: {getattr(args, arg)}")
     print()
 
@@ -164,15 +246,34 @@ def main():
     test_dl = data.DataLoader(test_dataset, batch_size=args.batch_size,
                               shuffle=False, num_workers=args.num_workers, pin_memory=True)
 
-    # --- unique output directory for this replicate ---
-    replicate_dir = args.save_dir + f"/replicate_{replicate}/"
-    os.makedirs(replicate_dir, exist_ok=True)
+    # --- auto-formatted experiment directory ---
+    exp_dir = format_experiment_dir(args)
+    replicate_dir = exp_dir / f"replicate_{replicate}"
+    replicate_dir.mkdir(parents=True, exist_ok=True)
 
-    log_path = os.path.join(replicate_dir, f"log.rep{replicate}.txt")
+    # Save architecture info
+    arch_info_file = replicate_dir / "architecture_info.txt"
+    with open(arch_info_file, 'w') as f:
+        f.write(f"Architecture type: {args.arch_type}\n")
+        f.write(f"Number of layers: {args.num_layers}\n")
+        f.write(f"Loss type: {args.loss_type}\n")
+        f.write(f"Replicate ID: {replicate}\n")
+        f.write(f"Training data: {args.train_data}\n")
+        f.write(f"Test data: {args.test_data}\n")
+
+    # --- log files ---
+    log_path = replicate_dir / f"log.rep{replicate}.txt"
     flog_final = open(log_path, 'w')
 
-    #print("Replicate\tDonor_auPRC\tAcceptor_auPRC\tCombined_auPRC", file=flog_auprc)
-    flog_regression = open(os.path.join(replicate_dir, f"regression_metrics_rep{replicate}.log"), "w")
+    flog_regression = open(
+        replicate_dir / f"regression_metrics_rep{replicate}.log", "w"
+    )
+
+    if replicate == 0:
+        with open(exp_dir / "config.txt", "w") as f:
+            for k, v in vars(args).items():
+                f.write(f"{k}: {v}\n")
+
     # --- Write header line for regression metrics log ---
     print(
         "Replicate\tEpoch\t"
@@ -192,8 +293,9 @@ def main():
                              num_workers=args.num_workers, pin_memory=True)
 
     # --- model setup ---
-    model = SimpleNetModified_DA_SSE(input_channels=4).cuda()
-    criterion = loss_function
+    model = get_model(args.num_layers, args.arch_type).cuda()
+    criterion = get_criterion(args.loss_type)
+
     optimizer = torch.optim.AdamW(model.parameters(),
                                   lr=args.learning_rate,
                                   weight_decay=args.weight_decay)
@@ -257,6 +359,9 @@ def main():
     )
 
     print(f"\nReplicate {replicate} Final Results:")
+    print(f"  Architecture: {args.arch_type}")
+    print(f"  Layers: {args.num_layers}")
+    print(f"  Loss: {args.loss_type}")
     print(f"  Donor:    MSE={donor['MSE']:.6f}, R²={donor['R2']:.6f}, Pearson={donor['Pearson']:.6f}")
     print(f"  Acceptor: MSE={acceptor['MSE']:.6f}, R²={acceptor['R2']:.6f}, Pearson={acceptor['Pearson']:.6f}")
     print(f"  Combined: MSE={combined['MSE']:.6f}, R²={combined['R2']:.6f}, Pearson={combined['Pearson']:.6f}")
@@ -272,9 +377,21 @@ def main():
 
     flog_final.close()
     flog_regression.close()
+    
+    # Save final summary
+    summary_file = replicate_dir / "training_summary.txt"
+    with open(summary_file, 'w') as f:
+        f.write(f"Training completed for replicate {replicate}\n")
+        f.write(f"Architecture: {args.arch_type}\n")
+        f.write(f"Layers: {args.num_layers}\n")
+        f.write(f"Loss: {args.loss_type}\n")
+        f.write(f"Best validation loss: {best_loss:.6f}\n")
+        f.write(f"Final donor metrics - MSE: {donor['MSE']:.6f}, R²: {donor['R2']:.6f}, Pearson: {donor['Pearson']:.6f}\n")
+        f.write(f"Final acceptor metrics - MSE: {acceptor['MSE']:.6f}, R²: {acceptor['R2']:.6f}, Pearson: {acceptor['Pearson']:.6f}\n")
+    
     print(f"Finished replicate {replicate}")
+    print(f"Results saved to: {exp_dir}")
 
-
-
+ 
 if __name__ == "__main__":
     main()

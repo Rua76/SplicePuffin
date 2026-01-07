@@ -46,10 +46,8 @@ class FactorizedFFTConvBlock(nn.Module):
         x = self.expand(x)
         return x
 
-
-
 # ------------------------------------------------------------
-#  DA model (Donor + Acceptor) and dataset
+#  DA model (Donor + Acceptor) and dataset (currently in use)
 # ------------------------------------------------------------
 class H5Dataset(data.Dataset):
     def __init__(self, file_path):
@@ -78,7 +76,7 @@ class H5Dataset(data.Dataset):
     def __len__(self):
         return self.length
 
-class SimpleNetModified_DA_SSE(nn.Module):
+class SimpleNet_TwoLayers(nn.Module):
     def __init__(self, input_channels=4):
         super().__init__()
         self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
@@ -90,32 +88,7 @@ class SimpleNetModified_DA_SSE(nn.Module):
         y_pred = torch.sigmoid(self.deconv(y))  # independent sigmoid per channel
         return y_pred[:, :, 500:-500]
     
-
-class SimpleNetModified_DA(nn.Module):
-    def __init__(self, input_channels=4):
-        super(SimpleNetModified_DA, self).__init__()
-        self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
-        self.activation = nn.Softplus()
-
-        # Separate deconv layers for donor and acceptor 
-        self.deconv_donor = FFTConv1d(40, 1, kernel_size=601, padding=300) 
-        self.deconv_acceptor = FFTConv1d(40, 1, kernel_size=601, padding=300)  
-
-    def forward(self, x):
-        y = self.conv(x)  # Shape: (batch_size, 40, 5000)
-        # activation
-        yact = self.activation(y)   # Shape: (batch_size, 40, 5000)
-        # Separate predictions for donor and acceptor
-        y_pred_donor = torch.sigmoid(self.deconv_donor(yact))  # Shape: (batch_size, 1, 5000)
-        y_pred_acceptor = torch.sigmoid(self.deconv_acceptor(yact))  # Shape: (batch_size, 1, 5000)
-        
-        # Concatenate the outputs along channel dimension
-        y_pred = torch.cat([y_pred_donor, y_pred_acceptor], dim=1)  # Shape: (batch_size, 2, 5000)
-        
-        # Crop the output to match label shape: 5000 -> 4000 by removing 500 from each side
-        return y_pred[:, :, 500:-500]  # Final shape: (batch_size, 2, 4000)
-    
-class SimpleNetModified_DA_TripleLayers(nn.Module):
+class SimpleNet_TripleLayers(nn.Module):
     def __init__(self, input_channels=4):
         super().__init__()
         self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
@@ -136,7 +109,73 @@ class SimpleNetModified_DA_TripleLayers(nn.Module):
         motifact = torch.sigmoid(self.synergy_layer(y)) * y
         y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
         return y_pred[:, :, 500:-500]
+
+class SimpleNet_TripleLayers_LargeKernel(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
+        self.synergy_layer = FactorizedFFTConvBlock(
+            in_channels=40,
+            out_channels=40,
+            mid_channels=4,   # your bottleneck
+            kernel_size=401,
+            padding=200
+        )
+
+        self.effect_layer = FFTConv1d(40, 2, kernel_size=1001, padding=500)
+        self.softplus = nn.Softplus()
+
+    def forward(self, x):
+        y = self.softplus(self.motif_layer(x))
+        motifact = torch.sigmoid(self.synergy_layer(y)) * y
+        y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500]
     
+class SimpleNet_TripleLayers_residual(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
+        self.synergy_layer = FactorizedFFTConvBlock(
+            in_channels=40,
+            out_channels=40,
+            mid_channels=4,   # your bottleneck
+            kernel_size=401,
+            padding=200
+        )
+
+        self.effect_layer = FFTConv1d(40, 2, kernel_size=601, padding=300)
+        self.softplus = nn.Softplus()
+
+    def forward(self, x):
+        y = self.softplus(self.motif_layer(x))
+        g = self.synergy_layer(y)
+        motifact = y * (1 + torch.sigmoid(g)) #Lower bound = y, Upper bound = 2y
+        y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500]
+   
+class SimpleNet_TripleLayers_softplus(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
+        self.synergy_layer = FactorizedFFTConvBlock(
+            in_channels=40,
+            out_channels=40,
+            mid_channels=4,   # your bottleneck
+            kernel_size=401,
+            padding=200
+        )
+
+        self.effect_layer = FFTConv1d(40, 2, kernel_size=601, padding=300)
+        self.softplus = nn.Softplus()
+
+    def forward(self, x):
+        y = self.softplus(self.motif_layer(x))
+        motifact = self.softplus(self.synergy_layer(y)) * y
+        y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500] 
 # ------------------------------------------------------------
 #  NDA model (3 channel label + SSE) and dataset
 # ------------------------------------------------------------
@@ -190,3 +229,31 @@ class SimpleNetModified_NDA(nn.Module):
         
         # Crop the output to match label shape: 5000 -> 4000 by removing 500 from each side
         return y_pred[:, :, 500:-500]  # Final shape: (batch_size, 4, 4000)
+    
+# ------------------------------------------------------------
+#  DA model modified (separate donor and acceptor) 
+# ------------------------------------------------------------
+class SimpleNetModified_DA(nn.Module):
+    def __init__(self, input_channels=4):
+        super(SimpleNetModified_DA, self).__init__()
+        self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        self.activation = nn.Softplus()
+
+        # Separate deconv layers for donor and acceptor 
+        self.deconv_donor = FFTConv1d(40, 1, kernel_size=601, padding=300) 
+        self.deconv_acceptor = FFTConv1d(40, 1, kernel_size=601, padding=300)  
+
+    def forward(self, x):
+        y = self.conv(x)  # Shape: (batch_size, 40, 5000)
+        # activation
+        yact = self.activation(y)   # Shape: (batch_size, 40, 5000)
+        # Separate predictions for donor and acceptor
+        y_pred_donor = torch.sigmoid(self.deconv_donor(yact))  # Shape: (batch_size, 1, 5000)
+        y_pred_acceptor = torch.sigmoid(self.deconv_acceptor(yact))  # Shape: (batch_size, 1, 5000)
+        
+        # Concatenate the outputs along channel dimension
+        y_pred = torch.cat([y_pred_donor, y_pred_acceptor], dim=1)  # Shape: (batch_size, 2, 5000)
+        
+        # Crop the output to match label shape: 5000 -> 4000 by removing 500 from each side
+        return y_pred[:, :, 500:-500]  # Final shape: (batch_size, 2, 4000)
+    
