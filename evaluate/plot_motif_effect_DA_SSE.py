@@ -16,9 +16,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 nets = []
 filenames = []
-for i in range(1, 14):
-    if i == 11:
-        continue
+for i in range(1, 13):
     f = f'./train_parallel_SSE/model.rep'+str(i)+'.pth'
     net = SimpleNetModified_DA_SSE()
     net.load_state_dict(torch.load(f, map_location='cpu'))  # Added map_location here

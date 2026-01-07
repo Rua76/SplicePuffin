@@ -15,6 +15,7 @@
 # ----------------------------
 source /project2/yangili1/yhsz5566/mambaforge/etc/profile.d/conda.sh
 conda activate puffin
+module load cuda/11.8
 # ----------------------------
 # File paths
 # ----------------------------

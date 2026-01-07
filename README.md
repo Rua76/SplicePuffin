@@ -26,7 +26,13 @@ This repository contains code and pretrained models for training and analyzing t
     ```bash
     pip install -r requirements.txt
     ```
-3. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
+3. Prepare your input data files (FASTA and splice table file) and place them in the `resources` directory.
+
+    Create a `resources` directory if it does not exist:
+    ```bash
+    mkdir resources
+    cd resources
+    ```
 
     Get `GRCh38.primary_assembly.genome.fa`:
     ```bash

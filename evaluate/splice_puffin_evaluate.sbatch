@@ -11,18 +11,8 @@
 
 source /project2/yangili1/yhsz5566/mambaforge/etc/profile.d/conda.sh
 
-conda activate pangolin
-module load cuda/11.7
-python evaluate_AUPRC.py \
-    --test_data ../../create_dataset/Annotated_datasets/filtered_test_test1.h5 \
-    --save_dir twolayers_KL_beta2_only_models/replicate_6/ \
-    --mode with_ref_genome \
-    --reference_file ../resources/GRCh38.primary_assembly.genome.fa \
-    --num_replicates 6 \
-    --skip_spliceai \
-    --skip_maxent \
-    --output_file twolayers_KL_beta2_only_auprc.pdf \
-    --batch_size 128
+conda activate puffin
+module load cuda/11.8
 
 # Run with multiple models
 python evaluate_connor_testset_scatter.py \
@@ -38,5 +28,5 @@ python evaluate_connor_testset_scatter.py \
         triple_layers_factorized_KL:trained_models_2025Dec9/train_parallel_SSE_triple_layers_factorized_KL/replicate_6/model.rep6.pth:3layer \
         spliceai:../../SpliceAI/spliceai/models/spliceai1.h5:spliceai
 
-conda activate puffin
-python plot_motif_effect_DA_SSE.py
+#conda activate puffin
+#python plot_motif_effect_DA_SSE.py
