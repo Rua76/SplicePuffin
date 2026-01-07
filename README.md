@@ -108,11 +108,11 @@ All codes are stored in the `train` directory.
 
 ### Model training script
 
+`train_splice_puffin_DA_parallel.py`
+
 This script trains a **SimpleNet** convolutional neural network for genomic sequence prediction using HDF5-formatted datasets. It supports multiple model architectures, configurable depth, different loss functions, and parallel replicate training.
 
 #### Overview
-
-`train_splice_puffin_DA_parallel.py`
 
 - Trains a SimpleNet model on a training H5 dataset
 - Evaluates performance on a separate test H5 dataset
