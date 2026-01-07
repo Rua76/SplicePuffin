@@ -247,7 +247,7 @@ This script evaluates multiple splice site prediction models on an exon-based te
 
 ---
 
-### Overview
+#### Overview
 
 - Runs inference for multiple splice site prediction models on a shared exon test set
 - Computes AUPRC metrics for each model
@@ -314,12 +314,14 @@ Unknown or unsupported type strings fall back to automatic detection with a warn
 
 ```bash
 python evaluate_connor_testset_scatter.py \
-  --data connor_exons.tsv \
-  --out_dir results/scatter \
-  --reference hg38.fa \
-  --models simple2:./models/simple_2layer.pth:2layer \
-  --models simple3:./models/simple_3layer.pth:3layer \
-  --models spliceai:./models/spliceai.h5:spliceai
+  --data ../../create_dataset/Connor_testest/Hao_test_set_w_Maxent_scores_20251017_.tsv \
+  --out_dir Connor_Exon_testset_results/scatter_plots \
+  --reference ../resources/GRCh38.primary_assembly.genome.fa \
+  --models simple_binary:trained_models_2025Dec9/train_parallel_Binary/model.rep6.pth:simple_binary \
+        twolayers_BCE:trained_models_2025Dec9/twolayers_BCE_SSE_models/replicate_6/model.rep6.pth:2layer \
+        triple_layers_factorized_BCE:trained_models_2025Dec9/train_parallel_SSE_triple_layers_factorized_BCE/replicate_6/model.rep6.pth:3layer \
+        spliceai:../../SpliceAI/spliceai/models/spliceai1.h5:spliceai
+
 ```
 
 #### Outputs
@@ -330,5 +332,13 @@ python evaluate_connor_testset_scatter.py \
 - Console summary of evaluated models
 
 ---
+
+### `simpleModel_InteractiveEffectCurves.ipynb`
+
+Model kernel live visualization and motif extraction using interactive effect curves.
+
+Just drop the trained model file (e.g., `model.rep7.pth`) into the same directory as the notebook and run all cells to visualize the learned motifs and effect curves.
+
+Only support two-layer SimpleNet models for now.
 
 **Note:** Ensure all dependencies required by the Puffin model framework are installed before running the training or motif extraction scripts.
