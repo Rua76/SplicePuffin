@@ -63,11 +63,12 @@ This repository contains code and pretrained models for training and analyzing t
     ```bash
     sbatch create_dataset_files.sbatch
     ```
+    
     This will create the necessary HDF5 files for training and testing, removing paralogous sequences as specified in the script.
    
-       - Training dataset file: `dataset_train_all.h5`
+    - Training dataset file: `dataset_train_all.h5`
    
-       - Testing dataset (paralogs removed) file: `filtered_test_1.h5`
+    - Testing dataset (paralogs removed) file: `filtered_test_1.h5`
 
 ---
 
