@@ -24,7 +24,7 @@ This repository contains code and pretrained models for training and analyzing t
     ```bash
     wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
     # unzip
-    gunzip 
+    gunzip gencode.v44.annotation.gtf.gz
     ```
     Run `creat_db.py` to process the GTF file into a `gffutils` database file:
     ```bash
