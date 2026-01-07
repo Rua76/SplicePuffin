@@ -18,6 +18,5 @@ conda activate puffin
 python remove_paralogs_from_h5.py \
     --train_path dataset_train_all.h5 \
     --test_path dataset_test_1.h5 \
-    --output_dir ./results \
     --min_identity 0.8 \
     --min_coverage 0.7
