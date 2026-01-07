@@ -106,6 +106,105 @@ All codes are stored in the `train` directory.
 
 2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
 
+### Model training script
+
+This script trains a **SimpleNet** convolutional neural network for genomic sequence prediction using HDF5-formatted datasets. It supports multiple model architectures, configurable depth, different loss functions, and parallel replicate training.
+
+#### Overview
+
+`train_splice_puffin_DA_parallel.py`
+
+- Trains a SimpleNet model on a training H5 dataset
+- Evaluates performance on a separate test H5 dataset
+- Supports 2-layer and 3-layer architectures with multiple variants
+- Allows parallel training via replicate IDs
+- Saves trained models and logs to a specified directory
+
+---
+
+#### Required arguments
+
+- `--train_data` (**required**): Path to the training dataset in HDF5 (`.h5`) format.
+- `--test_data` (**required**): Path to the test dataset in HDF5 (`.h5`) format.
+
+---
+
+#### Training parameters
+
+- `--batch_size`: Batch size used during training (default: `64`).
+- `--learning_rate`: Learning rate for the optimizer (default: `1e-4`).
+- `--weight_decay`: Weight decay applied during optimization (default: `0.01`).
+- `--validation_split`: Fraction of the training dataset reserved for validation (default: `0.1`).
+- `--epochs`: Number of training epochs (default: `100`).
+
+---
+
+#### Model identification and saving
+
+- `--model_name`: Base name used when saving the trained model (default: `simplenet_trained`).
+- `--model_num`: Model number or tag for logging and bookkeeping (default: `001`).
+- `--save_dir`: Directory where trained models and logs are saved (default: `./models`).
+- `--replicate_id`: Replicate ID for parallel or repeated training runs (default: `0`).
+
+---
+
+#### System and runtime options
+
+- `--num_workers`: Number of worker processes used for data loading (default: `4`).
+- `--test_mode`: If set, runs in test mode using a reduced subset of data (useful for debugging).
+
+---
+
+#### Model architecture options
+
+- `--num_layers`: Number of layers in the SimpleNet model.
+  - `2`: Two-layer SimpleNet
+  - `3`: Three-layer SimpleNet  
+  (default: `2`)
+
+- `--arch_type`: Architecture variant to use.
+  - `standard`: Default SimpleNet architecture
+  - `large_kernel`: Three-layer model with larger convolutional kernels
+  - `residual`: Three-layer model with residual connections
+  - `triple_layers`: Alias for the standard three-layer architecture
+  - `softplus`: Three-layer model using softplus activations  
+  (default: `standard`)
+
+> Note: Some architecture types are only available for 3-layer models. If an unsupported combination is specified, the script falls back to the standard architecture with a warning.
+
+---
+
+#### Loss function
+
+- `--loss_type`: Loss function used during training.
+  - `bce`: Binary cross-entropy loss
+  - `kl`: KL-divergence–based loss  
+  (default: `bce`)
+
+---
+
+#### Model selection logic
+
+The model architecture is selected internally based on `--num_layers` and `--arch_type`. Unsupported combinations automatically fall back to a standard architecture to ensure training can proceed.
+
+---
+
+#### Typical usage example
+
+```bash
+python train_model.py \
+  --train_data dataset_train.h5 \
+  --test_data dataset_test.h5 \
+  --num_layers 3 \
+  --arch_type residual \
+  --loss_type bce \
+  --replicate_id 0 \
+  --save_dir models/
+```
+
+---
+
+
 3. The number of models trained on one GPU is set to 4 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run. Do not use `11` as it result in failed training.
 
 4. Submit the training job using SLURM:
