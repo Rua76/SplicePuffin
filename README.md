@@ -3,7 +3,7 @@
 This repository contains code and pretrained models for training and analyzing the Puffin splice model.
 
 ---
-## To create data files for model training
+## To create data files for model training (~2 hours)
 
 1. use mamba or conda to create a new environment (python version 3.11):
     
@@ -63,11 +63,15 @@ This repository contains code and pretrained models for training and analyzing t
     ```bash
     sbatch create_dataset_files.sbatch
     ```
+    
     This will create the necessary HDF5 files for training and testing, removing paralogous sequences as specified in the script.
+   
+    - Training dataset file: `dataset_train_all.h5`
+    - Testing dataset (paralogs removed) file: `filtered_test_1.h5`
 
 ---
 
-## To train the model
+## To train the model (12 hours)
 
 All codes are stored in the `train` directory.
 
