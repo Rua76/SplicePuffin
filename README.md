@@ -229,8 +229,8 @@ python train_splice_puffin_DA_parallel.py \
 
 All codes are stored in the `evaluate` directory. 
 
-
-1. *OUTDATED* `evaluate_auprc.py` script is used to calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
+### *OUTDATED* `evaluate_auprc.py` 
+calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
 
     ```bash
     python evaluate_auprc.py \
@@ -241,7 +241,7 @@ All codes are stored in the `evaluate` directory.
         --num_workers 4
     ```
 
-2. `evaluate_connor_testset_scatter.py`
+### `evaluate_connor_testset_scatter.py`
 
 This script evaluates multiple splice site prediction models on an exon-based test dataset and generates **AUPRC scatter plots** for direct comparison across models. It supports SimpleNet variants, binary classifiers, and SpliceAI models, with automatic or explicit model type detection.
 
@@ -257,14 +257,14 @@ This script evaluates multiple splice site prediction models on an exon-based te
 
 ---
 
-### Required arguments
+#### Required arguments
 
 - `--data` (**required**): Path to the exon dataset in TSV format.
 - `--out_dir` (**required**): Output directory for prediction files, metrics, and figures.
 
 ---
 
-### Optional arguments
+#### Optional arguments
 
 - `--reference`: Path to reference genome FASTA file.  
   Required when evaluating SpliceAI models.
@@ -272,7 +272,7 @@ This script evaluates multiple splice site prediction models on an exon-based te
 
 ---
 
-### Model specification (`--models`)
+#### Model specification (`--models`)
 
 Models are specified using the `--models` argument, which may be provided multiple times. Each model is defined using one of the following formats:
     - tag:path
@@ -288,7 +288,7 @@ If `type` is omitted or set to `auto`, the script attempts to automatically dete
 
 ---
 
-### Supported model types
+#### Supported model types
 
 The following model type strings are recognized (case-insensitive):
 
@@ -302,7 +302,7 @@ Unknown or unsupported type strings fall back to automatic detection with a warn
 
 ---
 
-### Model parsing behavior
+#### Model parsing behavior
 
 - Model specifications are parsed at runtime and normalized into a unified internal format.
 - If no models are provided, the script exits with a usage warning and example commands.
@@ -310,7 +310,7 @@ Unknown or unsupported type strings fall back to automatic detection with a warn
 
 ---
 
-### Example usage
+#### Example usage
 
 ```bash
 python evaluate_connor_testset_scatter.py \
@@ -322,7 +322,7 @@ python evaluate_connor_testset_scatter.py \
   --models spliceai:./models/spliceai.h5:spliceai
 ```
 
-### Outputs
+#### Outputs
 
 - Cached model predictions (.npz)
 - AUPRC metrics for each model
