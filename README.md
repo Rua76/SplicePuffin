@@ -208,15 +208,15 @@ python train_splice_puffin_DA_parallel.py \
 ---
 
 
-3. The number of models trained on one GPU is set to 4 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run. Do not use `11` as it result in failed training.
-
+3. The number of models trained on one GPU is set to 6 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run.
+   
 4. Submit the training job using SLURM:
 
     ```bash
     sbatch splice_puffin_parallel_train.sbatch
     ```
 
-    There will be 12 models replicates trained. AUPRC and loss will be logged along the training process. The trained models and logs will be saved in the specified `SAVE_DIR`.
+    There will be 12 models replicates trained. loss will be logged along the training process. MSE, R^2 and Pearson correlation will be logged out every 100 epochs (Note: computation might be inapporpriate, just for monitoring the training process!) The trained models will be saved in `BASE_SAVE_DIR`.
 
 ---
 
