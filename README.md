@@ -5,29 +5,47 @@ This repository contains code and pretrained models for training and analyzing t
 ---
 ## To create data files for model training
 
-1. use mamba or conda to create a new environment with the required dependencies from 'puffin.yml':
+1. use mamba or conda to create a new environment (python version 3.11):
     
     ```bash
-    mamba env create -f puffin.yml
+    mamba create -n puffin python=3.11 -y
     mamba activate puffin
     ```
 
-2. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
-
-    Link to `GRCh38.primary_assembly.genome.fa`:
+    Install pytorch with CUDA 11.8
     ```bash
-    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
+    pip install torch==2.3.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
     ```
-    Link to `gencode.v44.annotation.gtf`:
+
+    Install `bedtools` with mamba/conda, this cannot be done with pip
     ```bash
-    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
+    mamba install -c bioconda bedtools
+    ```
+
+    Install the rest from `requirements.txt`
+    ```bash
+    pip install -r requirements.txt
+    ```
+3. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
+
+    Get `GRCh38.primary_assembly.genome.fa`:
+    ```bash
+    wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
+    # unzip
+    gunzip GRCh38.primary_assembly.genome.fa.gz
+    ```
+    Get `gencode.v44.annotation.gtf`:
+    ```bash
+    wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
+    # unzip
+    gunzip gencode.v44.annotation.gtf.gz
     ```
     Run `creat_db.py` to process the GTF file into a `gffutils` database file:
     ```bash
     python create_db.py --annotation_file gencode.v44.annotation.gtf 
     ```
 
-3. The table of splice sites is needed. An example row looks like this:
+4. The table of splice sites is needed. An example row looks like this:
 
     ```
     ENSG00000278267.1	0	chr1	-	17368	17436	chr1|17368|-|A:0.17154942528735637;
@@ -44,7 +62,7 @@ This repository contains code and pretrained models for training and analyzing t
 
     To train your own model, you need to create a similar table for your dataset.
 
-4. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
+5. Navigate to the `create_datasets` directory and run the `create_dataset_files.sbatch` script to generate the dataset files:
 
     ```bash
     sbatch create_dataset_files.sbatch
