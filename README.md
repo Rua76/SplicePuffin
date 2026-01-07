@@ -49,7 +49,7 @@ This repository contains code and pretrained models for training and analyzing t
 
     Here, the columns represent:
     - Gene ID
-    - 0 (used to indicate paralog, now deprecateds, just set to 0)
+    - 0 (used to indicate paralog, now deprecated, just set to 0)
     - Chromosome
     - Strand
     - Start position
