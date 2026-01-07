@@ -13,10 +13,19 @@ This repository contains code and pretrained models for training and analyzing t
     ```
 
     Install pytorch with CUDA 11.8
-   ```bash
-   pip install torch==2.3.* torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-   ```
+    ```bash
+    pip install torch==2.3.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+    ```
 
+    Install `bedtools` with mamba/conda, this cannot be done with pip
+    ```bash
+    mamba install -c bioconda bedtools
+    ```
+
+    Install the rest from `requirements.txt`
+    ```bash
+    pip install -r requirements.txt
+    ```
 3. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
 
     Get `GRCh38.primary_assembly.genome.fa`:
