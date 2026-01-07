@@ -112,13 +112,25 @@ All codes are stored in the `train` directory.
 
 2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
 
+3. The number of models trained on one GPU is set to 6 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run.
+   
+4. Submit the training job using SLURM:
+
+    ```bash
+    sbatch splice_puffin_parallel_train.sbatch
+    ```
+
+    There will be 12 models replicates trained. loss will be logged along the training process. MSE, R^2 and Pearson correlation will be logged out every 100 epochs (Note: computation might be inapporpriate, just for monitoring the training process!) The trained models will be saved in `BASE_SAVE_DIR`.
+
+---
+
 ### Model training script
+
+`train_splice_puffin_DA_parallel.py`
 
 This script trains a **SimpleNet** convolutional neural network for genomic sequence prediction using HDF5-formatted datasets. It supports multiple model architectures, configurable depth, different loss functions, and parallel replicate training.
 
 #### Overview
-
-`train_splice_puffin_DA_parallel.py`
 
 - Trains a SimpleNet model on a training H5 dataset
 - Evaluates performance on a separate test H5 dataset
@@ -198,30 +210,21 @@ The model architecture is selected internally based on `--num_layers` and `--arc
 #### Typical usage example
 
 ```bash
-python train_model.py \
-  --train_data dataset_train.h5 \
-  --test_data dataset_test.h5 \
-  --num_layers 3 \
-  --arch_type residual \
-  --loss_type bce \
-  --replicate_id 0 \
-  --save_dir models/
+python train_splice_puffin_DA_parallel.py \
+      --train_data $TRAIN_DATA \
+      --test_data $TEST_DATA \
+      --save_dir $BASE_SAVE_DIR \
+      --replicate_id $RID \
+      --batch_size 16 \
+      --learning_rate 5e-4 \
+      --num_layers 3 \
+      --arch_type standard  \
+      --loss_type bce \
+      --epochs 500
 ```
 
 ---
 
-
-3. The number of models trained on one GPU is set to 4 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run. Do not use `11` as it result in failed training.
-
-4. Submit the training job using SLURM:
-
-    ```bash
-    sbatch splice_puffin_parallel_train.sbatch
-    ```
-
-    There will be 12 models replicates trained. AUPRC and loss will be logged along the training process. The trained models and logs will be saved in the specified `SAVE_DIR`.
-
----
 
 ## To evaluate the model
 
