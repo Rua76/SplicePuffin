@@ -30,7 +30,7 @@ mkdir -p $BASE_SAVE_DIR
 # ----------------------------
 #  7 8 9 10 11 12 
 # ----------------------------
-# 3 layers model arch_type options: standard, large_kernel, residual 
+# 3 layers model arch_type options: standard, large_kernel, residual, softplus 
 # ----------------------------
 for RID in 1 2 3 4 5 6
 do
