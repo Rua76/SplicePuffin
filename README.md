@@ -225,13 +225,12 @@ python train_splice_puffin_DA_parallel.py \
 
 ---
 
-
 ## To evaluate the model
 
-All codes are stored in the `evaluate` directory.
+All codes are stored in the `evaluate` directory. 
 
 
-1. `evaluate_auprc.py` script is used to calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
+1. *OUTDATED* `evaluate_auprc.py` script is used to calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
 
     ```bash
     python evaluate_auprc.py \
@@ -242,31 +241,94 @@ All codes are stored in the `evaluate` directory.
         --num_workers 4
     ```
 
-2. `plot_predictions_vs_targets_DA.py` script is used to plot the model predictions against the true targets. Use the following command:
+2. `evaluate_connor_testset_scatter.py`
 
-    ```bash
-    python plot_predictions_vs_targets_DA.py \
-        --model_path ./models/model.rep0.pth \
-        --test_data ../../create_dataset/Annotated_SSE_Based_datasets/dataset_test_1.h5 \
-        --sample_idx 1000 \  # Index of the starting sample to plot
-        --num_samples 100 \  # Number of samples to plot
-        --output_dir ./models/plots \
-        --gtf ../resources/gencode.v44.annotation.db
-    ```
+This script evaluates multiple splice site prediction models on an exon-based test dataset and generates **AUPRC scatter plots** for direct comparison across models. It supports SimpleNet variants, binary classifiers, and SpliceAI models, with automatic or explicit model type detection.
 
-    Note that the gtf needs to be processed into a database file using `gffutils` before use.
+---
 
-3. `plot_motif_effect_DA.py` script is used to visualize the motifs and the motif effects learned by the model. Use the following command:
+### Overview
 
-    ```bash
-    python plot_motif_effect_DA.py \
-        --model_dir ../train/train_parallel \
-        --n_models 12 \
-        --output_dir ./figures/motif_effects \
-        --similarity_threshold 0.95 \
-        --replicate_select 1 \
-        --replicate_min 7
-    ```
+- Runs inference for multiple splice site prediction models on a shared exon test set
+- Computes AUPRC metrics for each model
+- Produces scatter plots comparing model performance
+- Supports caching of predictions to speed up repeated runs
+- Allows flexible specification of heterogeneous model types
+
+---
+
+### Required arguments
+
+- `--data` (**required**): Path to the exon dataset in TSV format.
+- `--out_dir` (**required**): Output directory for prediction files, metrics, and figures.
+
+---
+
+### Optional arguments
+
+- `--reference`: Path to reference genome FASTA file.  
+  Required when evaluating SpliceAI models.
+- `--force_rerun`: Force recomputation of model predictions even if cached `.npz` files already exist.
+
+---
+
+### Model specification (`--models`)
+
+Models are specified using the `--models` argument, which may be provided multiple times. Each model is defined using one of the following formats:
+    - tag:path
+    - tag:path:type
+
+
+Where:
+- `tag` is a short label used in plots and output filenames
+- `path` is the path to the model checkpoint or model directory
+- `type` specifies the model architecture or inference backend
+
+If `type` is omitted or set to `auto`, the script attempts to automatically detect the model type.
+
+---
+
+### Supported model types
+
+The following model type strings are recognized (case-insensitive):
+
+- `2layer`, `simple_2layer` → `simple_2layer`
+- `3layer`, `simple_3layer`, `triple` → `simple_3layer`
+- `binary`, `simple_binary` → `simple_binary`
+- `spliceai` → `spliceai`
+- `auto` → automatic model type detection
+
+Unknown or unsupported type strings fall back to automatic detection with a warning.
+
+---
+
+### Model parsing behavior
+
+- Model specifications are parsed at runtime and normalized into a unified internal format.
+- If no models are provided, the script exits with a usage warning and example commands.
+- All valid models are listed before evaluation begins for transparency.
+
+---
+
+### Example usage
+
+```bash
+python evaluate_connor_testset_scatter.py \
+  --data connor_exons.tsv \
+  --out_dir results/scatter \
+  --reference hg38.fa \
+  --models simple2:./models/simple_2layer.pth:2layer \
+  --models simple3:./models/simple_3layer.pth:3layer \
+  --models spliceai:./models/spliceai.h5:spliceai
+```
+
+### Outputs
+
+- Cached model predictions (.npz)
+- AUPRC metrics for each model
+- Scatter plot figures comparing model performance
+- Console summary of evaluated models
+
 ---
 
 **Note:** Ensure all dependencies required by the Puffin model framework are installed before running the training or motif extraction scripts.
