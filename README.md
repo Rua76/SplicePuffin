@@ -14,13 +14,17 @@ This repository contains code and pretrained models for training and analyzing t
 
 2. Prepare your input data files (FASTA and splice table file) and place them in the `create_datasets` directory.
 
-    Link to `GRCh38.primary_assembly.genome.fa`:
+    Get `GRCh38.primary_assembly.genome.fa`:
     ```bash
-    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
+    wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/GRCh38.primary_assembly.genome.fa.gz
+    # unzip
+    gunzip GRCh38.primary_assembly.genome.fa.gz
     ```
-    Link to `gencode.v44.annotation.gtf`:
+    Get `gencode.v44.annotation.gtf`:
     ```bash
-    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
+    wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/gencode.v44.annotation.gtf.gz
+    # unzip
+    gunzip 
     ```
     Run `creat_db.py` to process the GTF file into a `gffutils` database file:
     ```bash
