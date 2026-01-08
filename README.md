@@ -126,13 +126,13 @@ All codes are stored in the `train` directory.
 
 3. The number of models trained on one GPU is set to 6 by default. Before submitting the job, you need to manually change the `RID` variable in the `splice_puffin_parallel_train.sbatch` script to a unique identifier for your training run.
    
-4. Submit the training job using SLURM:
+4. Submit the training job using sbatch:
 
     ```bash
     sbatch splice_puffin_parallel_train.sbatch
     ```
 
-    There will be 12 models replicates trained. loss will be logged along the training process. MSE, R^2 and Pearson correlation will be logged out every 100 epochs (Note: computation might be inapporpriate, just for monitoring the training process!) The trained models will be saved in `BASE_SAVE_DIR`.
+    There will be 6 models replicates trained each submission. loss will be logged along the training process. MSE, R^2 and Pearson correlation will be logged out every 100 epochs (Note: computation might be inapporpriate, just for monitoring the training process!) The trained models will be saved in `BASE_SAVE_DIR`.
 
 ---
 
@@ -335,9 +335,7 @@ python evaluate_connor_testset_scatter.py \
   --reference ../resources/GRCh38.primary_assembly.genome.fa \
   --models simple_binary:trained_models_2025Dec9/train_parallel_Binary/model.rep6.pth:simple_binary \
         twolayers_BCE:trained_models_2025Dec9/twolayers_BCE_SSE_models/replicate_6/model.rep6.pth:2layer \
-        triple_layers_factorized_BCE:trained_models_2025Dec9/train_parallel_SSE_triple_layers_factorized_BCE/replicate_6/model.rep6.pth:3layer \
-        spliceai:../../SpliceAI/spliceai/models/spliceai1.h5:spliceai
-
+        triple_layers_factorized_BCE:trained_models_2025Dec9/train_parallel_SSE_triple_layers_factorized_BCE/replicate_6/model.rep6.pth:3layer 
 ```
 
 #### Outputs
