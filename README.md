@@ -82,32 +82,44 @@ This repository contains code and pretrained models for training and analyzing t
 All codes are stored in the `train` directory.
 
 1. Model architectures are stored in the `train/models.py` file. You can modify the architecture as needed.
-    Current model is `SimpleNetModified_DA`, which predicts both donor and acceptor splice sites simultaneously:
+    Current model is `SimpleNet_TwoLayers` and `SimpleNet_TripleLayers` which predicts both donor and acceptor splice sites simultaneously:
     
     ```python  
-    class SimpleNetModified_DA(nn.Module):
-        def __init__(self, input_channels=4):
-            super(SimpleNetModified_DA, self).__init__()
-            self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
-            self.activation = nn.Softplus()
+    class SimpleNet_TwoLayers(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        self.activation = nn.Softplus()
+        self.deconv = FFTConv1d(40, 2, kernel_size=601, padding=300)
 
-            # Separate deconv layers for donor and acceptor 
-            self.deconv_donor = FFTConv1d(40, 1, kernel_size=601, padding=300) 
-            self.deconv_acceptor = FFTConv1d(40, 1, kernel_size=601, padding=300)  
+    def forward(self, x):
+        y = self.activation(self.conv(x))
+        y_pred = torch.sigmoid(self.deconv(y))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500]
+    ```
 
-        def forward(self, x):
-            y = self.conv(x)  # Shape: (batch_size, 40, 5000)
-            # activation
-            yact = self.activation(y)   # Shape: (batch_size, 40, 5000)
-            # Separate predictions for donor and acceptor
-            y_pred_donor = torch.sigmoid(self.deconv_donor(yact))  # Shape: (batch_size, 1, 5000)
-            y_pred_acceptor = torch.sigmoid(self.deconv_acceptor(yact))  # Shape: (batch_size, 1, 5000)
-            
-            # Concatenate the outputs along channel dimension
-            y_pred = torch.cat([y_pred_donor, y_pred_acceptor], dim=1)  # Shape: (batch_size, 2, 5000)
-            
-            # Crop the output to match label shape: 5000 -> 4000 by removing 500 from each side
-            return y_pred[:, :, 500:-500]  # Final shape: (batch_size, 2, 4000)
+    ```python
+    class SimpleNet_TripleLayers(nn.Module):
+    def __init__(self, input_channels=4):
+        super().__init__()
+        self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+        #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
+        self.synergy_layer = FactorizedFFTConvBlock(
+            in_channels=40,
+            out_channels=40,
+            mid_channels=4,   # your bottleneck
+            kernel_size=401,
+            padding=200
+        )
+
+        self.effect_layer = FFTConv1d(40, 2, kernel_size=601, padding=300)
+        self.softplus = nn.Softplus()
+
+    def forward(self, x):
+        y = self.softplus(self.motif_layer(x))
+        motifact = torch.sigmoid(self.synergy_layer(y)) * y
+        y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
+        return y_pred[:, :, 500:-500]
     ```
 
 2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
