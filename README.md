@@ -241,6 +241,10 @@ python train_splice_puffin_DA_parallel.py \
 
 All codes are stored in the `evaluate` directory. 
 
+**Warning** Code NOT tested in fresh installed environment! 
+
+**Warning** Highly recommend not running tests with SpliceAI as current build do not include the code for Installing Tensorflow, which is a DISASTER to do! I can share SpliceAI prediction if you are interested.
+
 ### *OUTDATED* `evaluate_auprc.py` 
 calculate the AUPRC value of a specific replicate. Use the following command to evaluate a specific replicate:
 
