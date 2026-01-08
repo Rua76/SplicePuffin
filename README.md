@@ -86,40 +86,40 @@ All codes are stored in the `train` directory.
     
     ```python  
     class SimpleNet_TwoLayers(nn.Module):
-    def __init__(self, input_channels=4):
-        super().__init__()
-        self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
-        self.activation = nn.Softplus()
-        self.deconv = FFTConv1d(40, 2, kernel_size=601, padding=300)
+        def __init__(self, input_channels=4):
+            super().__init__()
+            self.conv = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+            self.activation = nn.Softplus()
+            self.deconv = FFTConv1d(40, 2, kernel_size=601, padding=300)
 
-    def forward(self, x):
-        y = self.activation(self.conv(x))
-        y_pred = torch.sigmoid(self.deconv(y))  # independent sigmoid per channel
-        return y_pred[:, :, 500:-500]
+        def forward(self, x):
+            y = self.activation(self.conv(x))
+            y_pred = torch.sigmoid(self.deconv(y))  # independent sigmoid per channel
+            return y_pred[:, :, 500:-500]
     ```
 
     ```python
     class SimpleNet_TripleLayers(nn.Module):
-    def __init__(self, input_channels=4):
-        super().__init__()
-        self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
-        #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
-        self.synergy_layer = FactorizedFFTConvBlock(
-            in_channels=40,
-            out_channels=40,
-            mid_channels=4,   # your bottleneck
-            kernel_size=401,
-            padding=200
-        )
+        def __init__(self, input_channels=4):
+            super().__init__()
+            self.motif_layer = nn.Conv1d(input_channels, 40, kernel_size=51, padding=25)
+            #self.synergy_layer = FFTConv1d(40, 40, kernel_size=401, padding=200)
+            self.synergy_layer = FactorizedFFTConvBlock(
+                in_channels=40,
+                out_channels=40,
+                mid_channels=4,   # your bottleneck
+                kernel_size=401,
+                padding=200
+            )
 
-        self.effect_layer = FFTConv1d(40, 2, kernel_size=601, padding=300)
-        self.softplus = nn.Softplus()
+            self.effect_layer = FFTConv1d(40, 2, kernel_size=601, padding=300)
+            self.softplus = nn.Softplus()
 
-    def forward(self, x):
-        y = self.softplus(self.motif_layer(x))
-        motifact = torch.sigmoid(self.synergy_layer(y)) * y
-        y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
-        return y_pred[:, :, 500:-500]
+        def forward(self, x):
+            y = self.softplus(self.motif_layer(x))
+            motifact = torch.sigmoid(self.synergy_layer(y)) * y
+            y_pred = torch.sigmoid(self.effect_layer(motifact))  # independent sigmoid per channel
+            return y_pred[:, :, 500:-500]
     ```
 
 2. Navigate to the `splice_puffin_parallel_train.sbatch` script and adjust the file paths for training and testing datasets as needed.
